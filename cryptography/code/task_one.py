@@ -20,14 +20,16 @@ def main():
     print(f'\nKey:\nIn ASCII: {key}\nIn HEX: {key.encode("utf-8").hex()}')
     print(f'\nPlain text:\nIn ASCII: {plain_text}\nIn HEX: {plain_text.encode("utf-8").hex()}')
 
+    key_hex = key.encode("utf-8").hex()
+
     start_time = time.time()
-    [cipher_text, cipher_hex] = aes_encrypt(key, plain_text)
+    [cipher_text, cipher_hex] = aes_encrypt(key_hex, plain_text)
     end_time = time.time()
     encryption_time = (end_time - start_time)*1000
     print(f'\nCipher text:\nIn ASCII: {cipher_text}\nIn HEX: {cipher_hex}')
 
     start_time = time.time()
-    [decipher_text, decipher_hex] = aes_decrypt(key, cipher_text)
+    [decipher_text, decipher_hex] = aes_decrypt(key_hex, cipher_text)
     end_time = time.time()
     decryption_time = (end_time - start_time)*1000
     print(f'\nDecipher text:\nIn ASCII: {decipher_text}\nIn HEX: {decipher_hex}')

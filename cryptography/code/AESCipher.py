@@ -218,11 +218,11 @@ def aes_block_decrypt(_state_matrix: list[list[BitVector]], _initial_key: list[l
     return _state_matrix
 
 
-def aes_encrypt(_key_text: str, _plain_text: str) -> str:
-    assert len(_key_text) == 16
+def aes_encrypt(_key_hex: str, _plain_text: str) -> str:
+    assert len(_key_hex) == 32
     state_matrices = block_plain_text(_plain_text)
     # column major order
-    initial_key = [[BitVector(intVal=ord(_key_text[i*4+j]), size=8) for i in range(4)] for j in range(4)]
+    initial_key = [[BitVector(hexstring= _key_hex[i*8+j*2:i*8+j*2+2]) for i in range(4)] for j in range(4)]
     cipher_matrices: list[list[list[BitVector]]] = []
     for state_matrix in state_matrices:
         cipher_matrices.append(aes_block_encrypt(state_matrix, initial_key))
@@ -232,11 +232,11 @@ def aes_encrypt(_key_text: str, _plain_text: str) -> str:
     return [cipher_text, cipher_hex]
 
 
-def aes_decrypt(_key_text: str, _cipher_text: str) -> str:
-    assert len(_key_text) == 16
+def aes_decrypt(_key_hex: str, _cipher_text: str) -> str:
+    assert len(_key_hex) == 32
     state_matrices = block_plain_text(_cipher_text)
     # column major order
-    initial_key = [[BitVector(intVal=ord(_key_text[i*4+j]), size=8) for i in range(4)] for j in range(4)]
+    initial_key = [[BitVector(hexstring= _key_hex[i*8+j*2:i*8+j*2+2]) for i in range(4)] for j in range(4)]
     plain_matrices: list[list[list[BitVector]]] = []
     for state_matrix in state_matrices:
         plain_matrices.append(aes_block_decrypt(state_matrix, initial_key))
