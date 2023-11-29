@@ -219,7 +219,10 @@ def aes_block_decrypt(_state_matrix: list[list[BitVector]], _initial_key: list[l
 
 
 def aes_encrypt(_key_hex: str, _plain_text: str) -> str:
-    assert len(_key_hex) == 32
+    if len(_key_hex) < 32:
+        _key_hex += "7" * (32 - len(_key_hex))
+    elif len(_key_hex) > 32:
+        _key_hex = _key_hex[:32]
     state_matrices = block_plain_text(_plain_text)
     # column major order
     initial_key = [[BitVector(hexstring= _key_hex[i*8+j*2:i*8+j*2+2]) for i in range(4)] for j in range(4)]
@@ -233,7 +236,10 @@ def aes_encrypt(_key_hex: str, _plain_text: str) -> str:
 
 
 def aes_decrypt(_key_hex: str, _cipher_text: str) -> str:
-    assert len(_key_hex) == 32
+    if len(_key_hex) < 32:
+        _key_hex += "7" * (32 - len(_key_hex))
+    elif len(_key_hex) > 32:
+        _key_hex = _key_hex[:32]
     state_matrices = block_plain_text(_cipher_text)
     # column major order
     initial_key = [[BitVector(hexstring= _key_hex[i*8+j*2:i*8+j*2+2]) for i in range(4)] for j in range(4)]

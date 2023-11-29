@@ -61,7 +61,8 @@ def chat(_socket: socket, _shared_key_hex: str) -> None:
 if __name__ == "__main__":
     host = "localhost"
     port = 12349
+    security_level = 0
     bob_socket = init_client_socket(host, port)
-    shared_key = ecdh_key_exchange(bob_socket, 0)
+    shared_key = ecdh_key_exchange(bob_socket, security_level)
     shared_key = hex(shared_key)[2:]
     chat(bob_socket, shared_key)
