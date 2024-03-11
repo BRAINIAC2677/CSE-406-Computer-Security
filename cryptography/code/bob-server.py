@@ -1,13 +1,17 @@
+# author: Asif Azad
+# Date: 2020-12-26
+# About: bob_server.py
+
 import socket
 import threading
-from AESCipher import aes_encrypt, aes_decrypt
-from ECDHCipher import ECDHCipher, Point
+import AESCipher
+import ECDHCipher
 
 
 def ecdh_key_exchange(_socket: socket) -> int:
     # receive nist_standard_curve object from Alice
-    nist_standard_curve = _socket.recv(1024).decode()
-    ecdh = ECDHCipher(_curve = eval(nist_standard_curve))
+    curve = _socket.recv(1024).decode()
+    ecdh = ECDHCipher.ECDHCipher(_curve = eval(curve))
     # generate Bob's private key
     bob_private_key = ecdh.generate_private_key()
     # generate Bob's public key
@@ -16,20 +20,20 @@ def ecdh_key_exchange(_socket: socket) -> int:
     _socket.send(str(bob_public_key).encode())
     # receive Alice's public key
     alice_public_key = _socket.recv(1024).decode()
-    alice_public_key = Point(int(alice_public_key.split(',')[0][1:]), int(alice_public_key.split(',')[1][:-1]))
+    alice_public_key = ECDHCipher.Point(int(alice_public_key.split(',')[0][1:]), int(alice_public_key.split(',')[1][:-1]))
     shared_key = ecdh.multiply_point(bob_private_key, alice_public_key)
     return shared_key.x
     
 
 def send_message(_socket: socket, _shared_key_hex: str, _msg: str) -> None:
-    [_msg, _ ] = aes_encrypt(_shared_key_hex, _msg)
+    [_msg, _ ] = AESCipher.aes_encrypt(_shared_key_hex, _msg)
     _socket.send(_msg.encode())
 
 
 def receive_message(_socket: socket, _shared_key_hex) -> None:
     while True:
         msg = _socket.recv(1024).decode()
-        [msg, _ ] = aes_decrypt(_shared_key_hex, msg)
+        [msg, _ ] = AESCipher.aes_decrypt(_shared_key_hex, msg)
         print(f"Received: {msg}")
         if msg == "q":
             break
@@ -50,7 +54,7 @@ def chat(_socket: socket, _shared_key_hex: str) -> None:
     # send messages
     while True:
         msg = input()
-        aes_encrypt(_shared_key_hex, msg)
+        AESCipher.aes_encrypt(_shared_key_hex, msg)
         send_message(_socket, _shared_key_hex, msg)
         if msg == "q":
             receive_thread.join()
@@ -60,7 +64,7 @@ def chat(_socket: socket, _shared_key_hex: str) -> None:
 
 if __name__ == "__main__":
     host = ""
-    port = 12349
+    port = 12355
     server_socket = init_server_socket(host, port)
     alice_socket, alice_addr = server_socket.accept()
     shared_key = ecdh_key_exchange(alice_socket)

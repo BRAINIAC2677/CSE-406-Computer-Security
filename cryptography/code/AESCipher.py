@@ -1,9 +1,10 @@
 # author: Asif Azad
 # Date: 2020-12-26
-# About: AES Encryption-128 and Decryption implementation 
+# About: AES Encryption and Decryption implementation; AESCipher.py
 
+import copy
+import random
 from BitVector import *
-
 
 Sbox = (
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -114,12 +115,12 @@ def generate_round_key(_initial_key: list[list[BitVector]], _round: int) -> list
     return updated_current_key
 
 
-def add_round_key(_state_matrix: list[list[BitVector]], _round_key: list[list[BitVector]])-> list[list[BitVector]]:
-    assert len(_state_matrix) == len(_round_key) and len(_state_matrix[0]) > 0 and len(_state_matrix[0]) == len(_round_key[0])
-    for i in range(len(_state_matrix)):
-        for j in range(len(_state_matrix[i])):
-            _state_matrix[i][j] ^= _round_key[i][j]
-    return _state_matrix
+def add(_matrix_a: list[list[BitVector]], _matrix_b: list[list[BitVector]])-> list[list[BitVector]]:
+    assert len(_matrix_a) == len(_matrix_b) and len(_matrix_a[0]) > 0 and len(_matrix_a[0]) == len(_matrix_b[0])
+    for i in range(len(_matrix_a)):
+        for j in range(len(_matrix_a[i])):
+            _matrix_a[i][j] ^= _matrix_b[i][j]
+    return _matrix_a
 
 
 def sub_bytes(_state_matrix: list[list[BitVector]]) -> list[list[BitVector]]:
@@ -193,29 +194,33 @@ def merge_blocks(_blocks: list[list[list[BitVector]]]) -> str:
 
 
 def aes_block_encrypt(_state_matrix: list[list[BitVector]], _initial_key: list[list[BitVector]]) -> list[list[BitVector]]:
-    _state_matrix = add_round_key(_state_matrix, _initial_key)
+    state_matrix = copy.deepcopy(_state_matrix)
+
+    state_matrix = add(state_matrix, _initial_key)
     for n_round in range(1, 10):
-        _state_matrix = sub_bytes(_state_matrix)
-        _state_matrix = shift_rows(_state_matrix)
-        _state_matrix = mix_columns(_state_matrix)
-        _state_matrix = add_round_key(_state_matrix, generate_round_key(_initial_key, n_round))
-    _state_matrix = sub_bytes(_state_matrix)
-    _state_matrix = shift_rows(_state_matrix)
-    _state_matrix = add_round_key(_state_matrix, generate_round_key(_initial_key, 10))
-    return _state_matrix
+        state_matrix = sub_bytes(state_matrix)
+        state_matrix = shift_rows(state_matrix)
+        state_matrix = mix_columns(state_matrix)
+        state_matrix = add(state_matrix, generate_round_key(_initial_key, n_round))
+
+    state_matrix = sub_bytes(state_matrix)
+    state_matrix = shift_rows(state_matrix)
+    state_matrix = add(state_matrix, generate_round_key(_initial_key, 10))
+    return state_matrix
 
 
 def aes_block_decrypt(_state_matrix: list[list[BitVector]], _initial_key: list[list[BitVector]]) -> list[list[BitVector]]:
-    _state_matrix = add_round_key(_state_matrix, generate_round_key(_initial_key, 10))
+    state_matrix = copy.deepcopy(_state_matrix)
+    state_matrix = add(state_matrix, generate_round_key(_initial_key, 10))
     for n_round in range(9, 0, -1):
-        _state_matrix = inv_shift_rows(_state_matrix)
-        _state_matrix = inv_sub_bytes(_state_matrix)
-        _state_matrix = add_round_key(_state_matrix, generate_round_key(_initial_key, n_round))
-        _state_matrix = inv_mix_columns(_state_matrix)
-    _state_matrix = inv_shift_rows(_state_matrix)
-    _state_matrix = inv_sub_bytes(_state_matrix)
-    _state_matrix = add_round_key(_state_matrix, _initial_key)
-    return _state_matrix
+        state_matrix = inv_shift_rows(state_matrix)
+        state_matrix = inv_sub_bytes(state_matrix)
+        state_matrix = add(state_matrix, generate_round_key(_initial_key, n_round))
+        state_matrix = inv_mix_columns(state_matrix)
+    state_matrix = inv_shift_rows(state_matrix)
+    state_matrix = inv_sub_bytes(state_matrix)
+    state_matrix = add(state_matrix, _initial_key)
+    return state_matrix
 
 
 def aes_encrypt(_key_hex: str, _plain_text: str) -> str:
@@ -226,9 +231,19 @@ def aes_encrypt(_key_hex: str, _plain_text: str) -> str:
     state_matrices = block_plain_text(_plain_text)
     # column major order
     initial_key = [[BitVector(hexstring= _key_hex[i*8+j*2:i*8+j*2+2]) for i in range(4)] for j in range(4)]
+    initial_vector = [[BitVector(intVal=0, size=8) for i in range(4)] for j in range(4)]
+    # random initial vector
+    for i in range(4):
+        for j in range(4):
+            initial_vector[i][j] = BitVector(intVal=random.randint(0, 255), size=8)
+
     cipher_matrices: list[list[list[BitVector]]] = []
+    cipher_matrices.append(initial_vector)
+
     for state_matrix in state_matrices:
+        state_matrix = add(state_matrix, cipher_matrices[-1])    
         cipher_matrices.append(aes_block_encrypt(state_matrix, initial_key))
+
     cipher_text = merge_blocks(cipher_matrices) 
     cipher_bv = BitVector(textstring=cipher_text)
     cipher_hex = cipher_bv.get_bitvector_in_hex()
@@ -241,11 +256,16 @@ def aes_decrypt(_key_hex: str, _cipher_text: str) -> str:
     elif len(_key_hex) > 32:
         _key_hex = _key_hex[:32]
     state_matrices = block_plain_text(_cipher_text)
+
     # column major order
     initial_key = [[BitVector(hexstring= _key_hex[i*8+j*2:i*8+j*2+2]) for i in range(4)] for j in range(4)]
+    
     plain_matrices: list[list[list[BitVector]]] = []
-    for state_matrix in state_matrices:
-        plain_matrices.append(aes_block_decrypt(state_matrix, initial_key))
+    
+    for i in range(1, len(state_matrices)):
+        plain_matrices.append(aes_block_decrypt(state_matrices[i], initial_key))
+        plain_matrices[-1] = add(plain_matrices[-1], state_matrices[i-1])
+
     plain_text = merge_blocks(plain_matrices) 
     plain_bv = BitVector(textstring=plain_text)
     plain_hex = plain_bv.get_bitvector_in_hex()

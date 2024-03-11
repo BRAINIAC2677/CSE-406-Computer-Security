@@ -1,35 +1,11 @@
+# author: Asif Azad
+# Date: 2020-12-26
+# About: Elliptic Curve Diffie-Hellman Key Exchange; ECDHCipher.py
+
 import random
+from sympy import isprime
 
-NIST_STANDARD_CURVES = [
-    {
-        "name": "P-128",
-        "k": 128,
-        "a": -3,
-        "b": 0x000E0D4D696E6768756151750CC03A4473D03679,
-        "p": 2**128 - 159,
-        "gx": 0x161FF7528B899B2D0C28607CA52C5B86,
-        "gy": 0xCF5AC8395BAFEB13C02DA292DDED7A83
-    },
-    {
-        "name": "P-192",
-        "k": 192,
-        "a": -3,
-        "b": 0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1,
-        "p": 2**192 - 2**64 - 1,
-        "gx": 0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012,
-        "gy": 0x07192b95ffc8da78631011ed6b24cdd573f977a11e794811,
-    },
-    {
-        "name": "P-256",
-        "k": 256,
-        "a": -3,
-        "b": 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b,
-        "p": 2**256 - 2**224 + 2**192 + 2**96 - 1,
-        "gx" : 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296,
-        "gy" : 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
-    }
-]
-
+SECURITY_LEVELS = [128, 192, 256]
 
 class Point:
     def __init__(self, x: int, y: int)-> None:
@@ -43,8 +19,8 @@ class Point:
 class ECDHCipher:
     def __init__(self, _security_level: int = 0, _curve: object = None)-> None:
         if(_curve is None):
-            assert _security_level < len(NIST_STANDARD_CURVES), "Invalid security level"
-            _curve = NIST_STANDARD_CURVES[_security_level]
+            assert _security_level < len(SECURITY_LEVELS), "Invalid security level"
+            _curve = self.generate_parameters(_security_level)
         else:
             # assert whether the curve has all the required parameters
             assert 'a' in _curve and 'b' in _curve and 'p' in _curve and 'k' in _curve and 'gx' in _curve and 'gy' in _curve, "Invalid curve"
@@ -53,6 +29,43 @@ class ECDHCipher:
         self.p = _curve['p']
         self.k = _curve['k']
         self.base_point = Point(_curve['gx'], _curve['gy'])        
+    
+    def get_parameters(self)->dict:
+        return {
+            "a": self.a,
+            "b": self.b,
+            "p": self.p,
+            "k": self.k,
+            "gx": self.base_point.x,
+            "gy": self.base_point.y
+        }
+    
+    def generate_parameters(self, _security_level: int = 0)-> dict:
+        k = SECURITY_LEVELS[_security_level]
+        p = self.generate_kbit_prime(k)
+        while True:
+            a = random.randint(1, p-1)
+            gx = random.randint(1, p-1)
+            gy = random.randint(1, p-1)
+            b = (gy*gy - gx*gx*gx - a*gx) % p
+            if (4*a*a*a + 27*b*b) % p != 0:
+                return {
+                    "a": a,
+                    "b": b,
+                    "p": p,
+                    "k": k,
+                    "gx": gx,
+                    "gy": gy
+                }
+
+    def generate_kbit_prime(self, k: int)-> int:
+        while True:
+            kbit_prime = random.randint(2**(k-1), 2**k - 1)
+            if isprime(kbit_prime):
+                return kbit_prime
+    
+    def show_curve(self)-> None:
+        print(f"y^2 = x^3 + {self.a}x + {self.b} mod {self.p}\nG = {self.base_point}")
 
     def add_points(self, p: Point = None, q: Point = None)-> Point:
         if p is None:

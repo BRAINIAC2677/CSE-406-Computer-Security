@@ -1,4 +1,9 @@
-import time
+# author: Asif Azad
+# Date: 2020-12-26
+# About: time evaluation of ECDHCipher; task 2
+
+
+import time;
 from ECDHCipher import ECDHCipher
 
 def evaluate_performance(_ecdh: ECDHCipher):
@@ -27,9 +32,10 @@ def evaluate_performance(_ecdh: ECDHCipher):
 
 
 def main():
-    # NIST Standards for Weierstrass Curves over prime fields
     for security_level in range(3):
         ecdh = ECDHCipher(_security_level = security_level)
+        ecdh.show_curve()
+
         [alice_public_key_time, bob_public_key_time, shared_key_time] = evaluate_performance(ecdh)
         print(f'\n\nPerformance for {ecdh.k}-bit prime:\nAlice Public Key Generation Time: {alice_public_key_time:.6f} ms\nBob Public Key Generation Time: {bob_public_key_time:.6f} ms\nShared Key Generation Time: {shared_key_time:.6f} ms')
 
