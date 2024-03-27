@@ -29,6 +29,7 @@ We were assigned to explore the Wazuh SIEM tool and explore the following featur
     Moreover, we were instructed to run the source code with basic changes.
 - [Slides](/wazuh/1905001_1905004_1905005_Wazuh_Slide.pptx)
 - [Report](/wazuh/1905001_1905004_1905005_Wazuh_Report.pdf)
+- [YouTube Demo](https://www.youtube.com/watch?v=Ndw6Fwi2i3w)
 - Group Members
     - 1905001 | Mohammad Sadat Hossain
     - 1905004 | Asif Azad
